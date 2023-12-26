@@ -11,7 +11,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.section import WD_SECTION
 from docx.shared import Cm, Pt, RGBColor
 import datetime
-from datetime import date, timedelta
+from datetime import timedelta
 import math
 import add_float_picture
 import warnings

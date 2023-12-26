@@ -9,6 +9,7 @@ Implement floating image based on python-docx.
 Create a docx sample (Layout | Positions | More Layout Options) and explore the
 source xml (Open as a zip | word | document.xml) to implement other text wrapping
 styles and position modes per `CT_Anchor._anchor_xml()`.
+辅助文件，不要跑
 '''
 
 from docx.oxml import parse_xml, register_element_cls

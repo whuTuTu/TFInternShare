@@ -5,7 +5,7 @@
 """
 # 载入包
 from iFinDPy import *
-from threading import Thread, Lock, Semaphore
+from threading import Lock, Semaphore
 from docx import Document
 from docx.oxml.ns import qn
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -18,8 +18,8 @@ import warnings
 warnings.filterwarnings(action='ignore')  # 导入warnings模块，并指定忽略代码运行中的警告信息
 
 # -------------------------------------------- 修改此处日期 --------------------------------------------
-# date = datetime.date.today()  # 在周六或者周日做周报，直接运行，会自动找到本周五的日期
-date = date(2023, 10, 28)  # 指定特定周在此处修改日期可以填写周六或者周日的日期
+date = datetime.date.today()  # 在周六或者周日做周报，直接运行，会自动找到本周五的日期
+# date = date(2023, 10, 28)  # 指定特定周在此处修改日期可以填写周六或者周日的日期
 
 # -------------------------------------------- 以下是代码 --------------------------------------------
 nearest_friday = date + datetime.timedelta(4 - date.weekday())
@@ -41,7 +41,7 @@ Year = nearest_friday.strftime(format3)
 Value = nearest_friday.strftime(format4)
 sem = Semaphore(5)
 dllock = Lock()
-thsLogin = THS_iFinDLogin("tfzq1556", "752862")
+thsLogin = THS_iFinDLogin("tfzq1928", "232596")
 document = Document()
 section = document.sections[0]
 section.page_width = Cm(21)

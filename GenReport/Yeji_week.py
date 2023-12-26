@@ -1,6 +1,6 @@
 """
 更新数据
-根据input/周业绩.xlsx数据生成描述性文字
+根据input/周业绩.xlsx数据生成描述性文字，表头不用修改
 """
 
 # 载入包
@@ -14,7 +14,7 @@ document = Document()
 document.styles['Normal'].font.name = 'Times New Roman'
 document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'仿宋')
 document.add_heading('主观多头', level=0)
-index = pd.read_excel(r'input/周业绩.xlsx', sheet_name='主观多头')
+index = pd.read_excel(r'input/业绩周数据.xlsx', sheet_name='主观多头')
 B = index['周涨跌幅']
 B_gt_0 = B > 0
 n1 = B_gt_0.sum()
@@ -143,7 +143,7 @@ else:
 up.add_run('。')
 document.add_heading('量化指增', level=0)
 # 读取excel
-index = pd.read_excel(r'input/周业绩.xlsx', sheet_name='量化指增')
+index = pd.read_excel(r'input/业绩周数据.xlsx', sheet_name='量化指增')
 B = index['上周超额']
 B_gt_0 = B > 0
 n1 = B_gt_0.sum()
@@ -222,7 +222,7 @@ else:
 up.add_run('。')
 
 document.add_heading('量化对冲', level=0)
-index = pd.read_excel(r'input/周业绩.xlsx', sheet_name='量化对冲')
+index = pd.read_excel(r'input/业绩周数据.xlsx', sheet_name='量化对冲')
 B = index['周涨跌幅']
 B_gt_0 = B > 0
 n1 = B_gt_0.sum()
@@ -312,7 +312,7 @@ else:
     up.add_run(str(third_score))
 up.add_run('。')
 document.add_heading('FOF/TOF', level=0)
-index = pd.read_excel(r'input/周业绩.xlsx', sheet_name='FOF')
+index = pd.read_excel(r'input/业绩周数据.xlsx', sheet_name='FOF')
 B = index['周涨跌幅']
 B_gt_0 = B > 0
 n1 = B_gt_0.sum()
@@ -440,7 +440,7 @@ else:
     up.add_run(str(third_score))
 up.add_run('。')
 document.add_heading('固定收益', level=0)
-index = pd.read_excel(r'input/周业绩.xlsx', sheet_name='固定收益')
+index = pd.read_excel(r'input/业绩周数据.xlsx', sheet_name='固定收益')
 B = index['周涨跌幅']
 B_gt_0 = B > 0
 n1 = B_gt_0.sum()
@@ -568,7 +568,7 @@ else:
     up.add_run(str(third_score))
 up.add_run('。')
 document.add_heading('CTA', level=0)
-index = pd.read_excel(r'input/周业绩.xlsx', sheet_name='CTA')
+index = pd.read_excel(r'input/业绩周数据.xlsx', sheet_name='CTA')
 B = index['周涨跌幅']
 B_gt_0 = B > 0
 n1 = B_gt_0.sum()
