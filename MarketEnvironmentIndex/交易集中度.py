@@ -78,14 +78,14 @@ for i in range(num_date):
     sum_total = allRatioDF1[column_name].sum()
     # 计算结果
     result1 = sum_top_10_percent / sum_total
-    con104list.append(result1)
+    con104list.append(result1*100)
 
     top_20_percent = df_sorted.head(int(0.2 * len(df_sorted)))
     # 计算前 10% 的数据某一列的加总
     sum_top_20_percent = top_20_percent[column_name].sum()
     # 计算结果
     result2 = sum_top_20_percent / sum_total
-    con204list.append(result2)
+    con204list.append(result2*100)
 
 plt.figure(figsize=(20, 6))
 date = [item[0:4] + item[5:7] + item[8:10] for item in column_names[1::]]
