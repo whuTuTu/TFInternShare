@@ -11,14 +11,14 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.section import WD_SECTION
 from docx.shared import Cm, Pt, RGBColor
 import datetime
-from datetime import timedelta
+from datetime import timedelta,date
 import math
 import add_float_picture
 import warnings
 warnings.filterwarnings(action='ignore')  # 导入warnings模块，并指定忽略代码运行中的警告信息
 # -------------------------------------------- 修改此处日期 --------------------------------------------
-date = datetime.date.today()  # 在周六或者周日做周报，直接运行，会自动找到本周五的日期
-# date = date(2023, 9, 28)  # 指定特定周在此处修改日期可以填写周六或者周日的日期
+# date = datetime.date.today()  # 在周六或者周日做周报，直接运行，会自动找到本周五的日期
+date = date(2023, 12, 31)  # 指定特定周在此处修改日期可以填写周六或者周日的日期
 
 # -------------------------------------------- 以下是代码 --------------------------------------------
 nearest_friday = date + timedelta(4 - date.weekday())

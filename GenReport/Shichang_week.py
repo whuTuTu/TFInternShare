@@ -15,7 +15,11 @@ import datetime
 import math
 import add_float_picture
 import warnings
+import configparser
 warnings.filterwarnings(action='ignore')  # 导入warnings模块，并指定忽略代码运行中的警告信息
+config = configparser.ConfigParser()
+config.read("config.ini", encoding="utf-8")
+apikey = [config.get("apikey", "ID2"),config.get("apikey", "password2")]
 
 # -------------------------------------------- 修改此处日期 --------------------------------------------
 date = datetime.date.today()  # 在周六或者周日做周报，直接运行，会自动找到本周五的日期
@@ -41,7 +45,7 @@ Year = nearest_friday.strftime(format3)
 Value = nearest_friday.strftime(format4)
 sem = Semaphore(5)
 dllock = Lock()
-thsLogin = THS_iFinDLogin("tfzq1928", "232596")
+thsLogin = THS_iFinDLogin(apikey[0], apikey[1])
 document = Document()
 section = document.sections[0]
 section.page_width = Cm(21)
