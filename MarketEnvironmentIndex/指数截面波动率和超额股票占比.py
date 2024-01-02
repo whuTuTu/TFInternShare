@@ -5,7 +5,7 @@
 @IDE     :Pycharm
 @Author  :tutu
 @Date    :2023/12/25 15:16
-不排除首日上市的股票
+没有排除首日上市的股票
 """
 # 载入包
 from iFinDPy import *  # 同花顺API接口
@@ -153,9 +153,10 @@ num_labels_to_display = len(date)
 step = len(x_smooth) // (num_labels_to_display - 1)
 x_ticks_to_display = x_smooth[::step]
 date_labels_to_display = date_list[::step]
-plt.xticks(x_ticks_to_display, date_labels_to_display, rotation=0)
+plt.xticks(x_ticks_to_display, date_labels_to_display, rotation=90)
 plt.ylabel('%')
-plt.grid(True)
+plt.grid(axis='x',linestyle='-')  # 只显示横向网格线
+plt.grid(axis='y',linestyle='')  # 不显示竖向网格线
 plt.tight_layout()
 plt.savefig('output/指数截面波动率.png')  # 保存为png图片
 
@@ -184,7 +185,7 @@ for i in range(3):
     step = len(x_smooth) // (num_labels_to_display - 1)
     x_ticks_to_display = x_smooth[::step]
     date_labels_to_display = date_list[::step]
-    plt.xticks(x_ticks_to_display, date_labels_to_display, rotation=45)
+    plt.xticks(x_ticks_to_display, date_labels_to_display, rotation=90)
     ax2 = ax1.twinx()
     ax2.bar(date, y_median[i], alpha=0.5, color='#DD9558', label='中位数超越幅度')
     ax2.set_ylabel('中位数超越幅度')

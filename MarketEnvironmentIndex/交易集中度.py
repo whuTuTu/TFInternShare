@@ -103,6 +103,7 @@ plt.figure(figsize=(20, 6))
 date = [item[0:4] + item[5:7] + item[8:10] for item in column_names[1::]]
 x = date
 names = ["前10%成交额占比", "前20%成交额占比"]
+color=['#dc965a','#efbf96']
 ally = [con104list, con204list]
 date_list = []
 for item in date:
@@ -114,16 +115,16 @@ for y in ally:
     f = interp1d(np.arange(len(x)), y, kind='cubic')
     x_smooth = np.linspace(0, len(x) - 1, len(date_list))
     y_smooth = f(x_smooth)
-    plt.plot(x_smooth, y_smooth, label=names[i], linewidth=2)
+    plt.plot(x_smooth, y_smooth, label=names[i], linewidth=2, color='red')
     i = i + 1
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1), ncol=4)
-
-num_labels_to_display = len(date)
+num_labels_to_display = 10
 step = len(x_smooth) // (num_labels_to_display - 1)
 x_ticks_to_display = x_smooth[::step]
 date_labels_to_display = date_list[::step]
 plt.xticks(x_ticks_to_display, date_labels_to_display, rotation=90)
 plt.ylabel('%')
-plt.grid(True)
+plt.grid(axis='x',linestyle='-')  # 只显示横向网格线
+plt.grid(axis='y',linestyle='')  # 不显示竖向网格线
 plt.tight_layout()
 plt.savefig('output/交易集中度.png')  # 保存为png图片
