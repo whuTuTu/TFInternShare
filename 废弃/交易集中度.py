@@ -5,6 +5,7 @@
 @IDE     :Pycharm
 @Author  :tutu
 @Date    :2023/12/26 11:16
+为月报准备，以月为单位储存数据。
 """
 # 载入包
 from iFinDPy import *  # 同花顺API接口

@@ -1,0 +1,238 @@
+# -*- coding: UTF-8 -*-
+"""
+@Project :TFInternShare
+@File    :三个表格汇总（周度）.py
+@IDE     :Pycharm
+@Author  :tutu
+@Date    :2024/1/3 11:23
+"""
+# 载入包
+from iFinDPy import *  # 同花顺API接口
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.interpolate import interp1d
+import numpy as np
+import warnings
+import configparser
+warnings.filterwarnings(action='ignore')
+warnings.filterwarnings(action='ignore')  # 导入warnings模块，并指定忽略代码运行中的警告信息
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 解决中文显示乱码的问题
+plt.rcParams['axes.unicode_minus'] = False
+config = configparser.ConfigParser()
+config.read("config.ini", encoding="utf-8")
+# 连接API接口
+apikey = [config.get("apikey", "ID3"), config.get("apikey", "password3")]
+thsLogin = THS_iFinDLogin(apikey[0], apikey[1])
+
+# ---------------------------------------------更改变量----------------------------------------------
+# 更改时间区间为一个月
+monthdate = ["20231129", "20231229"]
+
+# ---------------------------------------------下面为代码-----------------------------------------------
+# 获取股票代码
+allStock = THS_DR('p03291', 'date=' + monthdate[1] + ';blockname=001005010;iv_type=allcontract', 'p03291_f002:Y', 'format:dataframe').data.iloc[:, [0]].values.tolist()
+allStock1 = [item for sublist in allStock for item in sublist]
+# 获取股票收益率数据
+try:
+    RatioAndAmountDF = pd.read_csv("input/allWeekDF" + monthdate[0] + '-' + monthdate[1] + ".csv")
+except FileNotFoundError:
+    print("本地文件不存在，尝试从接口获取数据...")
+    n = int(len(allStock1) / 1000)
+    # 日频数据
+    RatioAndAmountDF = THS_HQ(allStock1[n * 1000::], 'changeRatio,amount', '', monthdate[0], monthdate[1]).data
+    for i in range(n):
+        df1 = THS_HQ(allStock1[i * 1000:(i + 1) * 1000], 'changeRatio,amount', '', monthdate[0], monthdate[1]).data
+        RatioAndAmountDF = pd.concat([RatioAndAmountDF, df1])
+    RatioAndAmountDF.to_csv("input/allWeekDF" + monthdate[0] + '-' + monthdate[1] + ".csv")
+
+allRatioDF = RatioAndAmountDF[[0,1,2]].pivot(index='thscode', columns='time', values='changeRatio')
+allAmountDF = RatioAndAmountDF[[0,1,3]].pivot(index='thscode', columns='time', values='amount')
+ThreeIndex = THS_HQ('000300.SH,000905.SH,000852.SH', 'changeRatio', '', monthdate[0], monthdate[1]).data
+ThreeIndex1 = ThreeIndex.pivot(index='thscode', columns='time', values='changeRatio')
+
+# 时间序列
+column_names = allRatioDF.columns
+date = [item[0:4] + item[5:7] + item[8:10] for item in column_names[1::]]
+date_len = len(date)
+
+# 计算波动率
+std5000 = []
+std300 = []
+std500 = []
+std1000 = []
+
+# 计算超额股票占比
+ratio300 = []
+ratio500 = []
+ratio1000 = []
+
+# 计算中位数超越幅度
+media300 = []
+media500 = []
+media1000 = []
+
+# 交易集中度
+con104list = []
+con204list = []
+
+for i in range(date_len):
+    # 全市场
+    DF5000 = allRatioDF[~allRatioDF['thscode'].isin(column_names)].dropna(subset=[column_names[i + 1]])[[column_names[i + 1]]]
+    std5000 = std5000 + DF5000.std().tolist()
+
+    # 沪深300
+    index300 = THS_DR('p03473', 'iv_date=' + date[i] + ';iv_zsdm=000300.SH', 'p03473_f002:Y','format:dataframe').data.iloc[:, [0]].values.tolist()
+    index300 = [item for sublist in index300 for item in sublist]  # 沪深300成分股
+    DF300 = allRatioDF[allRatioDF['thscode'].isin(index300)][[column_names[i + 1]]]
+    std300 = std300 + DF300.std().tolist()
+    count_above_threshold = len(DF300[DF300[column_names[i + 1]] > ThreeIndex1.loc['000300.SH', column_names[i + 1]]])
+    ratio300.append(count_above_threshold / 300 * 100)
+    median_value = DF300[column_names[i + 1]].median()
+    media300.append(median_value - ThreeIndex1.loc['000300.SH', column_names[i + 1]])
+
+    # 中证500
+    index500 = THS_DR('p03473', 'iv_date=' + date[i] + ';iv_zsdm=000905.SH', 'p03473_f002:Y',
+                      'format:dataframe').data.iloc[:, [0]].values.tolist()
+    index500 = [item for sublist in index500 for item in sublist]
+    DF500 = allRatioDF[allRatioDF['thscode'].isin(index500)][[column_names[i + 1]]]
+    std500 = std500 + DF500.std().tolist()
+    count_above_threshold = len(DF500[DF500[column_names[i + 1]] > ThreeIndex1.loc['000905.SH', column_names[i + 1]]])
+    ratio500.append(count_above_threshold / 500 * 100)
+    median_value = DF500[column_names[i + 1]].median()
+    media500.append(median_value - ThreeIndex1.loc['000905.SH', column_names[i + 1]])
+
+    # 中证1000
+    index1000 = THS_DR('p03473', 'iv_date=' + date[i] + ';iv_zsdm=000852.SH', 'p03473_f002:Y',
+                       'format:dataframe').data.iloc[:, [0]].values.tolist()
+    index1000 = [item for sublist in index1000 for item in sublist]
+    DF1000 = allRatioDF[allRatioDF['thscode'].isin(index1000)][[column_names[i + 1]]]
+    std1000 = std1000 + DF1000.std().tolist()
+    count_above_threshold = len(DF1000[DF1000[column_names[i + 1]] > ThreeIndex1.loc['000852.SH', column_names[i + 1]]])
+    ratio1000.append(count_above_threshold / 1000 * 100)
+    median_value = DF1000[column_names[i + 1]].median()
+    media1000.append(median_value - ThreeIndex1.loc['000852.SH', column_names[i + 1]])
+
+num_date = len(column_names) - 1
+for i in range(num_date):
+    column_name = column_names[i + 1]
+    # 按照某一列的值由大到小进行排序
+    df_sorted = allAmountDF.sort_values(by=column_name, ascending=False)
+    # 选择前 10% 的数据
+    top_10_percent = df_sorted.head(int(0.1 * len(df_sorted)))
+    # 计算前 10% 的数据某一列的加总
+    sum_top_10_percent = top_10_percent[column_name].sum()
+    # 计算整体某一列的加总
+    sum_total = allAmountDF[column_name].sum()
+    # 计算结果
+    result1 = sum_top_10_percent / sum_total
+    con104list.append(result1 * 100)
+
+    top_20_percent = df_sorted.head(int(0.2 * len(df_sorted)))
+    # 计算前 10% 的数据某一列的加总
+    sum_top_20_percent = top_20_percent[column_name].sum()
+    # 计算结果
+    result2 = sum_top_20_percent / sum_total
+    con204list.append(result2 * 100)
+
+# ########################################## 绘图【指数截面波动率图】##########################################
+plt.figure(figsize=(20, 6))
+date = [item[0:4] + item[5:7] + item[8:10] for item in column_names[1::]]
+x = date
+names = ["全市场", "沪深300", "中证500", "中证1000"]
+ally = [std5000, std300, std500, std1000]
+date_list = []
+for item in date:
+    date_list.append(item)
+    date_list = date_list + [" " for i in range(9)]
+date_list = date_list[0:-9]
+i = 0
+for y in ally:
+    f = interp1d(np.arange(len(x)), y, kind='cubic')
+    x_smooth = np.linspace(0, len(x) - 1, len(date_list))
+    y_smooth = f(x_smooth)
+    plt.plot(x_smooth, y_smooth, label=names[i], linewidth=2)
+    i = i + 1
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1), ncol=4)
+plt.title('指数截面波动率')
+
+num_labels_to_display = len(date)
+step = len(x_smooth) // (num_labels_to_display - 1)
+x_ticks_to_display = x_smooth[::step]
+date_labels_to_display = date_list[::step]
+plt.xticks(x_ticks_to_display, date_labels_to_display, rotation=90)
+plt.ylabel('%')
+plt.grid(axis='x',linestyle='-')  # 只显示横向网格线
+plt.grid(axis='y',linestyle='')  # 不显示竖向网格线
+plt.tight_layout()
+plt.savefig('output/指数截面波动率.png')  # 保存为png图片
+
+# ########################################## 绘图【超额股票占比】 ##########################################
+types = ["沪深300","中证500","中证1000"]
+y_ratio = [ratio300,ratio500,ratio1000]
+y_median = [media300,media500,media1000]
+
+date = [item[0:4] + item[5:7] + item[8:10] for item in column_names[1::]]
+date_list = []
+for item in date:
+    date_list.append(item)
+    date_list = date_list + [" " for i in range(9)]
+date_list = date_list[0:-9]
+for i in range(3):
+    x = date
+    y = y_ratio[i]
+    f = interp1d(np.arange(len(x)), y, kind='cubic')
+    x_smooth = np.linspace(0, len(x) - 1, len(date_list))
+    y_smooth = f(x_smooth)
+    fig, ax1 = plt.subplots(figsize=(15, 6))
+    ax1.fill_between(x_smooth, y_smooth, color='#F5D0B5', alpha=1, label='超额股票占比')
+    ax1.set_ylabel('超额股票占比%')
+    ax1.tick_params(axis='y')
+    num_labels_to_display = len(date)
+    step = len(x_smooth) // (num_labels_to_display - 1)
+    x_ticks_to_display = x_smooth[::step]
+    date_labels_to_display = date_list[::step]
+    plt.xticks(x_ticks_to_display, date_labels_to_display, rotation=90)
+    ax2 = ax1.twinx()
+    ax2.bar(date, y_median[i], alpha=0.5, color='#DD9558', label='中位数超越幅度')
+    ax2.set_ylabel('中位数超越幅度')
+    ax2.tick_params(axis='y')
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    lines = lines1 + lines2
+    labels = labels1 + labels2
+    plt.legend(lines, labels, loc='upper center', bbox_to_anchor=(0.5, 1), ncol=2)
+    plt.title('超额股票占比（'+types[i]+'）')
+    plt.savefig('output/超额股票占比（'+types[i]+'）.png')  # 保存为png图片
+
+# ########################################## 绘图【交易集中度】 ##########################################
+plt.figure(figsize=(20, 6))
+date = [item[0:4] + item[5:7] + item[8:10] for item in column_names[1::]]
+x = date
+names = ["前10%成交额占比", "前20%成交额占比"]
+color=['#dc965a','#efbf96']
+ally = [con104list, con204list]
+date_list = []
+for item in date:
+    date_list.append(item)
+    date_list = date_list + [" " for i in range(9)]
+date_list = date_list[0:-9]
+i = 0
+for y in ally:
+    f = interp1d(np.arange(len(x)), y, kind='cubic')
+    x_smooth = np.linspace(0, len(x) - 1, len(date_list))
+    y_smooth = f(x_smooth)
+    plt.plot(x_smooth, y_smooth, label=names[i], linewidth=2, color='red')
+    i = i + 1
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1), ncol=4)
+num_labels_to_display = 10
+step = len(x_smooth) // (num_labels_to_display - 1)
+x_ticks_to_display = x_smooth[::step]
+date_labels_to_display = date_list[::step]
+plt.xticks(x_ticks_to_display, date_labels_to_display, rotation=90)
+plt.ylabel('%')
+plt.grid(axis='x',linestyle='-')  # 只显示横向网格线
+plt.grid(axis='y',linestyle='')  # 不显示竖向网格线
+plt.tight_layout()
+plt.savefig('output/交易集中度.png')  # 保存为png图片
+
+
