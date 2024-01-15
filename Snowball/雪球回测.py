@@ -11,16 +11,17 @@ coupon_rate = 0.15  # 票息收益率，年化
 leverage = 1  # 杠杆倍数
 
 # 读取关联标的的历史收盘价数据，假设为中证500指数
-df = pd.read_excel(r'input/雪球输入.xlsx',sheet_name='500')  # 从csv文件读取数据，您需要根据您的数据源进行修改
+df = pd.read_excel(r'input/雪球输入.xlsx', sheet_name='500')  # 从csv文件读取数据，您需要根据您的数据源进行修改
 df['date'] = pd.to_datetime(df['date'])  # 将日期列转换为datetime格式
 
 df['close'] = df['close'].astype(float)  # 将收盘价列转换为浮点数格式
-df.set_index('date', inplace=True)# 将日期列设为索引
+df.set_index('date', inplace=True)  # 将日期列设为索引
+
 
 # 定义一个函数，根据给定的起始日期，模拟一个雪球合约的收益情况
 def snowball_return(start_date):
     # 计算合约到期日期，假设每月有20个交易日
-    end_date = start_date + pd.DateOffset(months=contract_term) ##DateOffset可以给定日期偏移量
+    end_date = start_date + pd.DateOffset(months=contract_term)  # DateOffset可以给定日期偏移量
 
     # 截取合约存续期内的标的收盘价数据
     sub_df = df.loc[start_date:end_date]
@@ -38,7 +39,6 @@ def snowball_return(start_date):
     in_date = None  # 敲入日期
     holding_days = 0  # 合约持有天数
 
-
     # 遍历每个交易日，判断是否发生敲出或敲入事件，并更新合约状态和收益
     for date, close in sub_df.items():
         holding_days += 1  # 持有天数加一
@@ -46,14 +46,14 @@ def snowball_return(start_date):
             continue
 
         if (holding_days % 20 == 0) and (close >= out_price):  # 如果是月度观察日且标的价格高于或等于敲出价格，视为发生敲出事件
-            knocked_out = True  #敲出观察日是月度
+            knocked_out = True  # 敲出观察日是月度
             out_date = date
             break
 
         # 如果没有发生敲出事件，判断是否发生敲入事件
         if not knocked_in:
             if close <= in_price:  # 如果标的价格低于或等于敲入价格，视为发生敲入事件
-                knocked_in = True #敲入观察日是日度
+                knocked_in = True  # 敲入观察日是日度
                 in_date = date
 
         # 如果到达合约到期日，结束循环
@@ -66,12 +66,14 @@ def snowball_return(start_date):
     elif not knocked_in:  # 如果没有发生敲入事件，到期终止合约，获得年化票息收益
         if holding_days > 480:
             return_rate = coupon_rate
-        else: return_rate = None
+        else:
+            return_rate = None
     else:  # 如果发生了敲入事件，到期终止合约，承担标的下跌造成的损失
         if holding_days > 480:
             if close >= initial_price:
                 return_rate = 0
-            else: return_rate = (close - initial_price) / initial_price
+            else:
+                return_rate = (close - initial_price) / initial_price
         else:
             return_rate = None
 
